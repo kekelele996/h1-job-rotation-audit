@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "gate_tests": [
+    "test_outputs.py::test_output_has_three_fields",
+    "test_outputs.py::test_non_permutation_exits_2"
+  ],
+  "tests": {
+    "test_outputs.py::test_rejects_table_where_nobody_rotates": {"weight": 0.12, "rationale": "难点1 判定：内控口径要求圈长大于轮次数，没人动过就无解，难点合计 0.36"},
+    "test_outputs.py::test_accepts_two_four_cycles_at_six_rounds": {"weight": 0.12, "rationale": "难点1 判定：轮次数为合数时同一长度的圈还能按更小的组归组，漏掉会把有解的判成无解"},
+    "test_outputs.py::test_accepts_three_four_cycles_at_nine_rounds": {"weight": 0.12, "rationale": "难点1 判定：换一个合数轮次数与圈长组合，确认不是只对单个样例成立"},
+    "test_outputs.py::test_counts_three_five_cycles_at_three_rounds": {"weight": 0.12, "rationale": "难点2 计数：单个圈自成一组的那一支算不算，差 1 也会露馅，难点合计 0.34"},
+    "test_outputs.py::test_counts_mixed_cycle_lengths": {"weight": 0.11, "rationale": "难点2 计数：两种圈长各自归组再相乘，确认各长度独立处理"},
+    "test_outputs.py::test_counts_six_four_cycles_at_six_rounds": {"weight": 0.11, "rationale": "难点2 计数：同一长度有两种可用的组大小，分组背包的权重与无序组数都要对"},
+    "test_outputs.py::test_root_rotates_four_four_cycles": {"weight": 0.10, "rationale": "难点3 构造：给出的换位表排 k 轮后必须与对照表逐项一致，难点合计 0.30"},
+    "test_outputs.py::test_root_keeps_everyone_moving": {"weight": 0.10, "rationale": "难点3 构造：换位表的圈长要全部大于轮次数，短圈即使能对上对照表也不合规"},
+    "test_outputs.py::test_root_for_six_four_cycles_is_repeatable": {"weight": 0.10, "rationale": "难点3 构造：六圈四轮次同时要拼两种组大小的长圈，并确认同一输入两次结果一致"}
+  }
+}
