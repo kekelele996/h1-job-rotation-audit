@@ -5,14 +5,41 @@
     "test_outputs.py::test_non_permutation_exits_2"
   ],
   "tests": {
-    "test_outputs.py::test_rejects_table_where_nobody_rotates": {"weight": 0.11, "rationale": "难点1 判定：内控口径要求每个圈长都大于轮次数，谁都没动过就无解，难点合计 0.33"},
-    "test_outputs.py::test_accepts_two_four_cycles_at_six_rounds": {"weight": 0.11, "rationale": "难点1 判定：轮次数是合数时同长圈还能按更小的组归组，漏掉会把有解的判成无解"},
-    "test_outputs.py::test_accepts_three_four_cycles_at_nine_rounds": {"weight": 0.11, "rationale": "难点1 判定：换一个合数轮次数与圈长组合，确认不是只对单个样例成立"},
-    "test_outputs.py::test_counts_three_five_cycles_at_three_rounds": {"weight": 0.11, "rationale": "难点2 计数：单个圈自成一组的那一支算不算，差 1 也会露馅，难点合计 0.33"},
-    "test_outputs.py::test_counts_mixed_cycle_lengths": {"weight": 0.11, "rationale": "难点2 计数：两种圈长各自归组再相乘，确认各长度独立处理"},
-    "test_outputs.py::test_counts_six_five_cycles_at_three_rounds": {"weight": 0.11, "rationale": "难点2 计数：六个同长圈要同时用 3+3 与 3+1+1+1 等分法，分组方案数要按多重组合数除重"},
-    "test_outputs.py::test_cost_for_four_four_cycles": {"weight": 0.12, "rationale": "难点3 总路程：四圈只能整组合成，要在组内摆法里挑最省的，难点合计 0.34"},
-    "test_outputs.py::test_cost_for_two_three_cycles": {"weight": 0.11, "rationale": "难点3 总路程：两个三圈既可以合成一个大圈也可以各自成组，两种分组的成本不同"},
-    "test_outputs.py::test_cost_for_three_five_cycles": {"weight": 0.11, "rationale": "难点3 总路程：三个五圈只能各自成组，考的是组内摆法的最优化与表本身的合规性"}
+    "test_outputs.py::test_rejects_table_where_nobody_rotates": {
+      "weight": 0.11,
+      "rationale": "难点1 判定：内控口径要求每个圈长都大于轮次数，谁都没动过就无解，难点合计 0.33"
+    },
+    "test_outputs.py::test_accepts_two_four_cycles_at_six_rounds": {
+      "weight": 0.11,
+      "rationale": "难点1 判定：轮次数是合数时同长圈还能按更小的组归组，漏掉会把有解的判成无解"
+    },
+    "test_outputs.py::test_accepts_three_four_cycles_at_nine_rounds": {
+      "weight": 0.11,
+      "rationale": "难点1 判定：换一个合数轮次数与圈长组合，确认不是只对单个样例成立"
+    },
+    "test_outputs.py::test_counts_three_four_cycles_at_nine_rounds": {
+      "weight": 0.11,
+      "rationale": "难点2 计数：三个零点下各自 32 张，并集只有 128 张，按零点相加会多算，难点合计 0.33"
+    },
+    "test_outputs.py::test_counts_two_three_cycles_at_two_rounds": {
+      "weight": 0.11,
+      "rationale": "难点2 计数：单个零点 4 张、六个零点并集 12 张，考的是去重"
+    },
+    "test_outputs.py::test_counts_three_three_cycles_at_three_rounds": {
+      "weight": 0.11,
+      "rationale": "难点2 计数：三个 3 圈在九个零点下并集 54 张，含圈长与零点的交互"
+    },
+    "test_outputs.py::test_cost_for_four_three_cycles_at_two_rounds": {
+      "weight": 0.11,
+      "rationale": "难点3 总路程：四个 3 圈并集 138 张最省 16，考的是并集上的最小与合规性"
+    },
+    "test_outputs.py::test_cost_for_two_three_cycles_at_two_rounds": {
+      "weight": 0.12,
+      "rationale": "难点3 总路程：两个 3 圈六个零点并集 12 张，最省 8，单看 0 号零点会偏大，难点合计 0.34"
+    },
+    "test_outputs.py::test_cost_for_three_three_cycles_at_three_rounds": {
+      "weight": 0.11,
+      "rationale": "难点3 总路程：三个 3 圈并集 54 张最省 28，并要求给出的表在某个零点下能对上"
+    }
   }
 }

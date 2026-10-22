@@ -6,7 +6,7 @@
 - 一个难点至少三个计分测试，每个只断言这个难点影响的字段，避免一个修复顺带让别的难点变绿；
 - 计分测试在原始（未修）代码上必须全部失败，否则 NOP 拿分；
 - gate 测试（入口能跑、非法输入退出码）写进 scoring.json 的 gate_tests，不计分。
-期望值来自 research/ 里的独立复核（穷举全部置换、枚举全部分组两条路径），不用 solution/ 生成。
+期望值来自 research/ 里的独立复核（穷举全部置换、按零点枚举取并集两条路径），不用 solution/ 生成。
 
 本文件以 root 运行；被测程序一律通过 run_candidate() 以 runner 身份、干净环境变量、
 独立进程组运行，超时整组结束。
@@ -79,7 +79,7 @@ def reject(rounds, after):
 
 
 def rotation(n, cycles):
-    """按圈列表拼一个对照表：after[i] 是起点在 i 号岗位的人 k 轮后的岗位。"""
+    """按圈列表拼一个对照表（记录仪坐标里 0 号零点）。"""
     table = list(range(n))
     for cycle in cycles:
         for index, post in enumerate(cycle):
@@ -95,6 +95,12 @@ def rings(n, sizes):
         groups.append(list(range(base, base + size)))
         base += size
     return groups
+
+
+def shifted(table, offset):
+    """把记录仪坐标里的表读回真实岗位编号：task(p) = table(p + offset) - offset。"""
+    n = len(table)
+    return [(table[(p + offset) % n] - offset) % n for p in range(n)]
 
 
 def is_permutation(values, size):
@@ -131,11 +137,17 @@ def shortest_ring(root):
     return best
 
 
+def explains(rounds, after, root):
+    """root 在某个零点下排 rounds 轮后与 after 一致。"""
+    powered = rotated(len(after), root, rounds)
+    return any(powered == shifted(after, offset) for offset in range(len(after)))
+
+
 def root_is_valid(rounds, after, root):
-    """root 是置换、排 rounds 轮后与 after 一致、且每名员工 rounds 轮内不重复落位。"""
+    """root 是置换、某个零点下能对上 after、且每名员工 rounds 轮内不重复落位。"""
     if not is_permutation(root, len(after)):
         return False
-    if rotated(len(after), root, rounds) != list(after):
+    if not explains(rounds, after, root):
         return False
     return shortest_ring(root) > rounds
 
@@ -165,62 +177,62 @@ def test_non_permutation_exits_2():
 # ---------- 难点 1：判定，含"谁都没动"与合数轮次 ----------
 
 def test_rejects_table_where_nobody_rotates():
-    """「一名员工从某一轮出发，连同出发那一轮算起，连续 k 轮里落过的岗位不能有重复」"""
+    """「连续 k 轮里落过的岗位不能有重复」"""
     assert audit(4, rotation(4, [[0], [1], [2], [3]]))["exists"] is False
 
 
 def test_accepts_two_four_cycles_at_six_rounds():
-    """「是否存在符合内控要求的单轮换位表」"""
+    """「是否存在某个零点与一张符合内控要求的单轮换位表」"""
     assert audit(6, rotation(8, [[0, 1, 2, 3], [4, 5, 6, 7]]))["exists"] is True
 
 
 def test_accepts_three_four_cycles_at_nine_rounds():
-    """「是否存在符合内控要求的单轮换位表」"""
+    """「是否存在某个零点与一张符合内控要求的单轮换位表」"""
     assert audit(9, rotation(12, [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]]))["exists"] is True
 
 
-# ---------- 难点 2：符合条件的换位表张数 ----------
+# ---------- 难点 2：能解释记录的不同换位表张数 ----------
 
-def test_counts_three_five_cycles_at_three_rounds():
-    """「符合条件的单轮换位表张数，精确整数」"""
-    got = audit(3, rotation(15, rings(15, [5, 5, 5])))
-    assert got["root_count"] == 51
+def test_counts_three_four_cycles_at_nine_rounds():
+    """「能解释这份记录的不同换位表张数，精确整数，同一张表只算一次」"""
+    got = audit(9, rotation(12, rings(12, [4, 4, 4])))
+    assert got["root_count"] == 128
 
 
-def test_counts_mixed_cycle_lengths():
+def test_counts_two_three_cycles_at_two_rounds():
     """「判断和计数都要精确」"""
-    got = audit(3, rotation(21, rings(21, [5, 5, 5, 2, 2, 2])))
-    assert got["root_count"] == 408
+    got = audit(2, rotation(6, rings(6, [3, 3])))
+    assert got["root_count"] == 12
 
 
-def test_counts_six_five_cycles_at_three_rounds():
-    """「符合条件的单轮换位表张数，精确整数」"""
-    got = audit(3, rotation(30, rings(30, [5, 5, 5, 5, 5, 5])))
-    assert got["root_count"] == 26001
+def test_counts_three_three_cycles_at_three_rounds():
+    """「能解释这份记录的不同换位表张数，精确整数，同一张表只算一次」"""
+    got = audit(3, rotation(9, rings(9, [3, 3, 3])))
+    assert got["root_count"] == 54
 
 
 # ---------- 难点 3：总路程最小的那张换位表 ----------
 
-def test_cost_for_four_four_cycles():
-    """「报出的最小总路程要等于所有合规方案里的最小值」"""
-    after = rotation(16, rings(16, [4, 4, 4, 4]))
-    got = audit(4, after)
-    assert got["min_cost"] == 96
-    assert root_cost(got["root"]) == 96
-
-
-def test_cost_for_two_three_cycles():
-    """「每名员工在连续 `rounds` 轮里不重复落位」"""
+def test_cost_for_two_three_cycles_at_two_rounds():
+    """「报出的最小总路程要等于所有能解释这份记录的方案里的最小值」"""
     after = rotation(6, rings(6, [3, 3]))
     got = audit(2, after)
     assert got["min_cost"] == 8
-    assert root_is_valid(2, after, got["root"]) is True
+    assert root_cost(got["root"]) == 8
 
 
-def test_cost_for_three_five_cycles():
-    """「按它排 `rounds` 轮之后，岗位和 `after` 逐项一致」"""
-    after = rotation(15, rings(15, [5, 5, 5]))
+def test_cost_for_three_three_cycles_at_three_rounds():
+    """「每名员工在连续 `rounds` 轮里不重复落位」"""
+    after = rotation(9, rings(9, [3, 3, 3]))
     got = audit(3, after)
-    assert got["min_cost"] == 36
+    assert got["min_cost"] == 28
     assert root_is_valid(3, after, got["root"]) is True
-    assert root_cost(got["root"]) == 36
+
+
+def test_cost_for_four_three_cycles_at_two_rounds():
+    """「按它排 `rounds` 轮之后，在某个零点下与 `after` 逐项一致」"""
+    after = rotation(12, rings(12, [3, 3, 3, 3]))
+    got = audit(2, after)
+    assert got["min_cost"] == 16
+    assert root_is_valid(2, after, got["root"]) is True
+    assert root_cost(got["root"]) == 16
