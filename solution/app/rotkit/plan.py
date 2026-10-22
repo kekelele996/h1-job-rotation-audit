@@ -172,8 +172,9 @@ def cheapest_plan(after, rounds):
     best = None
     for table in _union(after, rounds):
         cost = sum(abs(table[post] - post) for post in range(len(table)))
-        if best is None or cost < best[0] or (cost == best[0] and table < best[1]):
-            best = (cost, table)
+        candidate = (cost, table)
+        if best is None or candidate < best:
+            best = candidate
     return None if best is None else (best[0], list(best[1]))
 
 
