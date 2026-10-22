@@ -53,6 +53,7 @@ def main(argv):
     result = {
         "exists": found,
         "root_count": plan.count_roots(after, rounds),
+        "min_cost": plan.min_cost(after, rounds) if found else None,
         "root": root,
     }
     print(json.dumps(result, ensure_ascii=False))

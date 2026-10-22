@@ -22,14 +22,13 @@ from pathlib import Path
 FIXED = Path("/app/rotkit/plan.py")
 ORIGINAL = Path("/tmp/plan_original.py")
 TARGETS = {
-    "difficulty_1": "exists_root",
-    "difficulty_2": "count_roots",
-    "difficulty_3": "build_root",
+    "difficulty_1": ["exists_root"],
+    "difficulty_2": ["count_roots"],
+    "difficulty_3": ["build_root", "min_cost"],
 }
 
 
-def function_span(path, name):
-    text = path.read_text(encoding="utf-8")
+def function_span(text, name):
     tree = ast.parse(text)
     hits = [
         node
@@ -37,10 +36,10 @@ def function_span(path, name):
         if isinstance(node, ast.FunctionDef) and node.name == name
     ]
     if len(hits) != 1:
-        sys.exit(f"{path} 里名为 {name} 的函数有 {len(hits)} 个，应为 1")
+        sys.exit(f"名为 {name} 的函数有 {len(hits)} 个，应为 1")
     node = hits[0]
     lines = text.splitlines(keepends=True)
-    return lines, node.lineno - 1, node.end_lineno
+    return node.lineno - 1, node.end_lineno
 
 
 skip = [item for item in os.environ.get("SKIP", "").split(",") if item]
@@ -49,19 +48,21 @@ if unknown:
     sys.exit(f"HTB_SKIP 里有未知难点：{unknown}")
 
 text = FIXED.read_text(encoding="utf-8")
+original_text = ORIGINAL.read_text(encoding="utf-8")
 for key in skip:
-    name = TARGETS[key]
-    _, old_start, old_end = function_span(FIXED, name)
-    original_lines, new_start, new_end = function_span(ORIGINAL, name)
-    fixed_lines = text.splitlines(keepends=True)
-    if fixed_lines[old_start:old_end] == original_lines[new_start:new_end]:
-        sys.exit(f"{key} 的修复片段和原写法相同，留一法不会生效")
-    text = "".join(
-        fixed_lines[:old_start]
-        + original_lines[new_start:new_end]
-        + fixed_lines[old_end:]
-    )
-    print(f"留一法：{key} 退回原写法（{name}）", file=sys.stderr)
+    for name in TARGETS[key]:
+        old_start, old_end = function_span(text, name)
+        new_start, new_end = function_span(original_text, name)
+        original_lines = original_text.splitlines(keepends=True)
+        fixed_lines = text.splitlines(keepends=True)
+        if fixed_lines[old_start:old_end] == original_lines[new_start:new_end]:
+            sys.exit(f"{key} 的修复片段和原写法相同，留一法不会生效")
+        text = "".join(
+            fixed_lines[:old_start]
+            + original_lines[new_start:new_end]
+            + fixed_lines[old_end:]
+        )
+        print(f"留一法：{key} 退回原写法（{name}）", file=sys.stderr)
 
 FIXED.write_text(text, encoding="utf-8")
 PY

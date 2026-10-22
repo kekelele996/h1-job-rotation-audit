@@ -6,7 +6,7 @@
 - 一个难点至少三个计分测试，每个只断言这个难点影响的字段，避免一个修复顺带让别的难点变绿；
 - 计分测试在原始（未修）代码上必须全部失败，否则 NOP 拿分；
 - gate 测试（入口能跑、非法输入退出码）写进 scoring.json 的 gate_tests，不计分。
-期望值来自 research/ 里的独立复核（穷举 n<=8 与分组公式两条路径），不用 solution/ 生成。
+期望值来自 research/ 里的独立复核（穷举全部置换、枚举全部分组两条路径），不用 solution/ 生成。
 
 本文件以 root 运行；被测程序一律通过 run_candidate() 以 runner 身份、干净环境变量、
 独立进程组运行，超时整组结束。
@@ -140,12 +140,19 @@ def root_is_valid(rounds, after, root):
     return shortest_ring(root) > rounds
 
 
+def root_cost(root):
+    """一张换位表的总路程；root 不是置换时返回 None。"""
+    if not is_permutation(root, len(root)):
+        return None
+    return sum(abs(root[post] - post) for post in range(len(root)))
+
+
 # ---------- gate：入口与契约，不计分 ----------
 
-def test_output_has_three_fields():
-    """「标准输出写一个 JSON 对象，只有三个字段」"""
+def test_output_has_four_fields():
+    """「标准输出写一个 JSON 对象，只有四个字段」"""
     got = audit(2, rotation(4, [[0, 1], [2, 3]]))
-    assert set(got) == {"exists", "root_count", "root"}
+    assert set(got) == {"exists", "root_count", "min_cost", "root"}
 
 
 def test_non_permutation_exits_2():
@@ -186,29 +193,34 @@ def test_counts_mixed_cycle_lengths():
     assert got["root_count"] == 408
 
 
-def test_counts_six_four_cycles_at_six_rounds():
+def test_counts_six_five_cycles_at_three_rounds():
     """「符合条件的单轮换位表张数，精确整数」"""
-    got = audit(6, rotation(24, rings(24, [4, 4, 4, 4, 4, 4])))
-    assert got["root_count"] == 123840
+    got = audit(3, rotation(30, rings(30, [5, 5, 5, 5, 5, 5])))
+    assert got["root_count"] == 26001
 
 
-# ---------- 难点 3：给出一张能对上对照表的换位表 ----------
+# ---------- 难点 3：总路程最小的那张换位表 ----------
 
-def test_root_rotates_four_four_cycles():
-    """「按它排 `rounds` 轮之后，岗位和 `after` 逐项一致」"""
+def test_cost_for_four_four_cycles():
+    """「报出的最小总路程要等于所有合规方案里的最小值」"""
     after = rotation(16, rings(16, [4, 4, 4, 4]))
-    assert root_is_valid(4, after, audit(4, after)["root"]) is True
+    got = audit(4, after)
+    assert got["min_cost"] == 96
+    assert root_cost(got["root"]) == 96
 
 
-def test_root_keeps_everyone_moving():
+def test_cost_for_two_three_cycles():
     """「每名员工在连续 `rounds` 轮里不重复落位」"""
     after = rotation(6, rings(6, [3, 3]))
-    assert root_is_valid(2, after, audit(2, after)["root"]) is True
+    got = audit(2, after)
+    assert got["min_cost"] == 8
+    assert root_is_valid(2, after, got["root"]) is True
 
 
-def test_root_for_six_four_cycles_is_repeatable():
-    """「同一份对照表重复执行，结果一致」"""
-    after = rotation(24, rings(24, [4, 4, 4, 4, 4, 4]))
-    first = audit(6, after)["root"]
-    assert root_is_valid(6, after, first) is True
-    assert audit(6, after)["root"] == first
+def test_cost_for_three_five_cycles():
+    """「按它排 `rounds` 轮之后，岗位和 `after` 逐项一致」"""
+    after = rotation(15, rings(15, [5, 5, 5]))
+    got = audit(3, after)
+    assert got["min_cost"] == 36
+    assert root_is_valid(3, after, got["root"]) is True
+    assert root_cost(got["root"]) == 36

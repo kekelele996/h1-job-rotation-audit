@@ -3,5 +3,6 @@
   "checked_by": "内控科",
   "checked_at": "2026-09-18",
   "exists": true,
-  "root_count": 2
+  "root_count": 2,
+  "min_cost": 8
 }

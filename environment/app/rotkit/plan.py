@@ -4,6 +4,9 @@
 等长的圈，所以反过来看，对照表里长度相同的圈可以并回一个长圈。这里按"每 k 个
 同长圈并成一个"来推算：只有每种长度的圈数都是轮次数 k 的整数倍，这张对照表
 才可能由某张换位表排出来。
+
+岗位沿走廊按编号排开，一次交接从 p 号岗位到 q 号岗位的路程是 |p - q|，
+一张换位表的总路程是 sum(|root[p] - p|)。
 """
 
 from __future__ import annotations
@@ -45,3 +48,11 @@ def build_root(after, rounds):
             for i in range(size):
                 root[flat[i]] = flat[(i + 1) % size]
     return root
+
+
+def min_cost(after, rounds):
+    """报出这张换位表的总路程。"""
+    root = build_root(after, rounds)
+    if root is None:
+        return None
+    return sum(abs(root[post] - post) for post in range(len(root)))
